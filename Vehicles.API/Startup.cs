@@ -28,9 +28,16 @@ namespace Vehicles.API
             services.AddControllers();
             services.AddHttpClient("whereIsMyTransport", c =>
             {
-                c.BaseAddress = new Uri("https://platform.whereismytransport.com/api/");
+                c.BaseAddress = new Uri("https://platform.whereismytransport.com/");
                 c.DefaultRequestHeaders.Add("Accept", "application/json");
             });
+
+            services.AddHttpClient("whereIsMyTransportAuth", c =>
+            {
+                c.BaseAddress = new Uri("https://identity.whereismytransport.com/");
+                c.DefaultRequestHeaders.Add("Content-Type", "application/x-www-form-urlencoded");
+            });
+
             //services.AddHealthChecks();
 
         }

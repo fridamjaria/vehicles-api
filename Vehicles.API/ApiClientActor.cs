@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using Akka.Actor;
 
 namespace Vehicles.API
@@ -10,11 +11,26 @@ namespace Vehicles.API
 
         public ApiClientActor()
         {
-            Receive<HttpRequestMessage>(request => {
-                var client = _clientFactory.CreateClient("whereIsMyTransport");
-                var response = client.SendAsync(request);
+            Receive<HttpRequestMessage>(async request => {
+                if(String.IsNullOrEmpty(ClientAuthenticationActor.AccessToken))
+                {
+                    Props ClientAuthenticationActorProps = Props.Create(() =>
+                        new ClientAuthenticationActor()
+                    );
 
-                Sender.Tell("Ok");
+                    var clientAuthenticationActor = Context.ActorOf(
+                        ClientAuthenticationActorProps, "clientAuthenticationActor"
+                    );
+
+                    clientAuthenticationActor.Tell("start");
+                }
+
+                var client = _clientFactory.CreateClient("whereIsMyTransport");
+                client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", ClientAuthenticationActor.AccessToken);
+
+                var response = await client.SendAsync(request);
+                Sender.Tell(response);
             });
         }
     }
