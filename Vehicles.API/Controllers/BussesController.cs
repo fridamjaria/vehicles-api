@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
+using Akka.Actor;
 
 namespace Vehicles.API.Controllers
 {
@@ -7,6 +8,7 @@ namespace Vehicles.API.Controllers
     [Route("api/busses")]
     public class BussesController : ControllerBase
     {
+        public static ActorSystem BusActorSystem = ActorSystem.Create("BusActorSystem");
 
         [HttpGet]
         public IActionResult GetBusses()

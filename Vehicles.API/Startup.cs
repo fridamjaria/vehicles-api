@@ -26,6 +26,13 @@ namespace Vehicles.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddHttpClient("whereIsMyTransport", c =>
+            {
+                c.BaseAddress = new Uri("https://platform.whereismytransport.com/api/");
+                c.DefaultRequestHeaders.Add("Accept", "application/json");
+            });
+            //services.AddHealthChecks();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
