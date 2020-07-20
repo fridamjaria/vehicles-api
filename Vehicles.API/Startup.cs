@@ -1,4 +1,5 @@
 using System;
+using Akka.Actor;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -32,6 +33,9 @@ namespace Vehicles.API
             services.AddSingleton<BusService>();
 
             services.AddControllers();
+
+            ActorSystem actorSystem = ActorSystem.Create("VehiclesActorSystem");
+            services.AddSingleton(typeof(ActorSystem), (serviceProvider) => actorSystem);
 
             services.AddHttpClient("whereIsMyTransport", c =>
             {
