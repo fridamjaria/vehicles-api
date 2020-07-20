@@ -1,15 +1,13 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Vehicles.API.Models;
+using Vehicles.API.Services;
 
 namespace Vehicles.API
 {
@@ -22,13 +20,22 @@ namespace Vehicles.API
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<VehiclesDatabaseSettings>(
+                Configuration.GetSection(nameof(VehiclesDatabaseSettings)));
+
+            services.AddSingleton<IVehiclesDatabaseSettings>(sp =>
+                sp.GetRequiredService<IOptions<VehiclesDatabaseSettings>>().Value);
+
+            services.AddSingleton<BusService>();
+
             services.AddControllers();
+
             services.AddHttpClient("whereIsMyTransport", c =>
             {
-                c.BaseAddress = new Uri("https://platform.whereismytransport.com/");
+                c.BaseAddress = new Uri("https://platform.whereismytransport.com/api/");
                 c.DefaultRequestHeaders.Add("Accept", "application/json");
             });
 
@@ -38,11 +45,9 @@ namespace Vehicles.API
                 c.DefaultRequestHeaders.Add("Content-Type", "application/x-www-form-urlencoded");
             });
 
-            //services.AddHealthChecks();
-
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -50,7 +55,6 @@ namespace Vehicles.API
                 app.UseDeveloperExceptionPage();
             }
 
-            //app.UseHttpsRedirection();
 
             app.UseRouting();
 
