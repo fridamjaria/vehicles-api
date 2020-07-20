@@ -9,6 +9,7 @@ namespace Vehicles.API
     public class ClientAuthenticationActor : ReceiveActor
     {
         public static string AccessToken { get; private set; }
+        public static readonly string startCommand = "start";
         private readonly IHttpClientFactory _clientFactory;
 
         public ClientAuthenticationActor()
@@ -26,13 +27,17 @@ namespace Vehicles.API
                 { "scope",         "transportapi:all" }
             };
 
-            Receive<String>(message =>
+            Receive<string>(message =>
             {
-                var client = _clientFactory.CreateClient("whereIsMyTransportAuth");
-                var response = client.PostAsync("connect/token", new FormUrlEncodedContent(payload)).Result;
-                string json = response.Content.ReadAsStringAsync().Result;
-                var jObject = JObject.Parse(json);
-                AccessToken = jObject["access_token"].ToString();
+                if(string.Equals(message, startCommand, StringComparison.OrdinalIgnoreCase))
+                {
+                    var client = _clientFactory.CreateClient("whereIsMyTransportAuth");
+                    var response = client.PostAsync("connect/token", new FormUrlEncodedContent(payload)).Result;
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    var jObject = JObject.Parse(json);
+                    AccessToken = jObject["access_token"].ToString();
+                    Sender.Tell("continue");
+                } 
             });
 
         }
