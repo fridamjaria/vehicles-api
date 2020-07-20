@@ -30,6 +30,7 @@ namespace Vehicles.API
                 sp.GetRequiredService<IOptions<VehiclesDatabaseSettings>>().Value);
 
             services.AddSingleton<BusService>();
+            services.AddSingleton<LineService>();
 
             services.AddControllers().AddNewtonsoftJson(options => options.UseMemberCasing());
 
