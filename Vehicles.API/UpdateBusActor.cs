@@ -1,12 +1,14 @@
-﻿using Akka.Actor;
+﻿using System;
+using Akka.Actor;
 
 namespace Vehicles.API
 {
     public class UpdateBusActor : ReceiveActor
     {
-        public UpdateBusActor()
+        private readonly Guid _busId;
+        public UpdateBusActor(Guid busId)
         {
-
+            _busId = busId;
         }
     }
 }

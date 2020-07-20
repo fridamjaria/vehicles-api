@@ -21,9 +21,9 @@ namespace Vehicles.API.Controllers
         [HttpGet]
         public async Task<JsonResult> GetBussesAsync()
         {
-            Props GetBussesActorProps = Props.Create(() => new GetBusActor());
-            var getBussesActor = _actorSystem.ActorOf(GetBussesActorProps, "getBussesActor");
-            var response = await getBussesActor.Ask<List<Bus>>("listAll");
+            Props GetBusActorProps = Props.Create(() => new GetBusActor());
+            var getBusActor = _actorSystem.ActorOf(GetBusActorProps, "getBusActor");
+            var response = await getBusActor.Ask<List<Bus>>("listAll");
 
             return new JsonResult(response);
         }
@@ -31,9 +31,9 @@ namespace Vehicles.API.Controllers
         [HttpGet("{busId:guid}")]
         public async Task<JsonResult> GetBus(Guid busId)
         {
-            Props GetBussesActorProps = Props.Create(() => new GetBusActor());
-            var getBussesActor = _actorSystem.ActorOf(GetBussesActorProps, "getBusActor");
-            var response = await getBussesActor.Ask<Bus>(busId);
+            Props GetBusActorProps = Props.Create(() => new GetBusActor());
+            var getBusActor = _actorSystem.ActorOf(GetBusActorProps, "getBusActor");
+            var response = await getBusActor.Ask<Bus>(busId);
 
             return new JsonResult(response);
         }
@@ -46,7 +46,7 @@ namespace Vehicles.API.Controllers
                 return BadRequest();
             }
 
-            Props UpdateBusActorProps = Props.Create(() => new UpdateBusActor());
+            Props UpdateBusActorProps = Props.Create(() => new UpdateBusActor(busId));
             var updateBusActor = _actorSystem.ActorOf(UpdateBusActorProps, "updateBusActor");
             var response = await updateBusActor.Ask<Boolean>(options);
 
@@ -71,7 +71,7 @@ namespace Vehicles.API.Controllers
         [HttpDelete("{busId:guid}")]
         public async Task<ActionResult> DeleteBus(Guid busId)
         {
-            Props DeleteBusActorProps = Props.Create(() => new GetBussesActor());
+            Props DeleteBusActorProps = Props.Create(() => new DeleteBusActor());
             var deleteBusActor = _actorSystem.ActorOf(DeleteBusActorProps, "deleteBusActor"); ;
             var response = await deleteBusActor.Ask<Boolean>(busId);
 
