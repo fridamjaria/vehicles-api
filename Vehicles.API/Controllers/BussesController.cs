@@ -1,81 +1,88 @@
 ﻿using System;
-using Microsoft.AspNetCore.Mvc;
-using Akka.Actor;
 using System.Collections.Generic;
-using Vehicles.API.Models;
 using System.Threading.Tasks;
+using Akka.Actor;
+using Microsoft.AspNetCore.Mvc;
+using Vehicles.API.Models;
+using Vehicles.API.Services;
 
 namespace Vehicles.API.Controllers
 {
     [ApiController]
-    [Route("api/busses")]
+    [Route("api/[controller]")]
     public class BussesController : ControllerBase
     {
-        private ActorSystem _actorSystem;
+        private readonly ActorSystem _actorSystem;
+        private readonly BusService _busService;
 
-        public BussesController(ActorSystem actorSystem)
+        public BussesController(ActorSystem actorSystem, BusService busService)
         {
             _actorSystem = actorSystem;
+            _busService = busService;
         }
 
-        [HttpGet]
-        public async Task<JsonResult> GetBussesAsync()
+        [HttpPost]
+        public async Task<ActionResult> CreateBus(Bus payload)
         {
-            Props GetBusActorProps = Props.Create(() => new GetBusActor());
-            var getBusActor = _actorSystem.ActorOf(GetBusActorProps, "getBusActor");
-            var response = await getBusActor.Ask<List<Bus>>("listAll");
+            if (payload == null)
+            {
+                return BadRequest();
+            }
+
+            Props createBusActorProps = Props.Create(() => new CreateBusActor(_busService));
+            var createBusActor = _actorSystem.ActorOf(createBusActorProps);
+
+            var response = await createBusActor.Ask<Bus>(payload);
 
             return new JsonResult(response);
         }
 
-        [HttpGet("{busId:guid}")]
-        public async Task<JsonResult> GetBus(Guid busId)
+        [HttpGet]
+        public async Task<JsonResult> GetBusses()
         {
-            Props GetBusActorProps = Props.Create(() => new GetBusActor());
-            var getBusActor = _actorSystem.ActorOf(GetBusActorProps, "getBusActor");
+            Props GetBusActorProps = Props.Create(() => new GetBusActor(_busService));
+            var getBusActor = _actorSystem.ActorOf(GetBusActorProps);
+            var response = await getBusActor.Ask<List<Bus>>(GetBusActor.findAllCommand);
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet("{busId:length(24)}")]
+        public async Task<JsonResult> GetBus(string busId)
+        {
+            Props GetBusActorProps = Props.Create(() => new GetBusActor(_busService));
+            var getBusActor = _actorSystem.ActorOf(GetBusActorProps);
             var response = await getBusActor.Ask<Bus>(busId);
 
             return new JsonResult(response);
         }
 
-        [HttpPatch("{busId:guid}")]
-        public async Task<ActionResult> UpdateBus(Guid busId, JsonOptions options)
+        [HttpPatch("{busId:length(24)}")]
+        public async Task<ActionResult> UpdateBus(string busId, Bus payload)
         {
-            if (options == null)
+            if (payload == null)
             {
                 return BadRequest();
             }
 
-            Props UpdateBusActorProps = Props.Create(() => new UpdateBusActor(busId));
-            var updateBusActor = _actorSystem.ActorOf(UpdateBusActorProps, "updateBusActor");
-            var response = await updateBusActor.Ask<Boolean>(options);
+            Props UpdateBusActorProps = Props.Create(() => new UpdateBusActor(busId, _busService));
+            var updateBusActor = _actorSystem.ActorOf(UpdateBusActorProps);
 
-            return new JsonResult(response);
+            payload.Id = busId;
+            await updateBusActor.Ask<Boolean>(payload);
+
+            return NoContent();
         }
 
-        [HttpPost]
-        public async Task<ActionResult> CreateBus(JsonOptions options)
+        [HttpDelete("{busId:length(24)}")]
+        public async Task<ActionResult> DeleteBus(string busId)
         {
-            if (options == null)
-            {
-                return BadRequest();
-            }
+            Props DeleteBusActorProps = Props.Create(() => new DeleteBusActor(_busService));
+            var deleteBusActor = _actorSystem.ActorOf(DeleteBusActorProps);
 
-            Props createBusActorProps = Props.Create(() => new CreateBusActor());
-            var createBusActor = _actorSystem.ActorOf(createBusActorProps, "createBusActor");
-            var response = await createBusActor.Ask<Boolean>(options);
+            await deleteBusActor.Ask<Boolean>(busId);
 
-            return new JsonResult(response);
-        }
-
-        [HttpDelete("{busId:guid}")]
-        public async Task<ActionResult> DeleteBus(Guid busId)
-        {
-            Props DeleteBusActorProps = Props.Create(() => new DeleteBusActor());
-            var deleteBusActor = _actorSystem.ActorOf(DeleteBusActorProps, "deleteBusActor"); ;
-            var response = await deleteBusActor.Ask<Boolean>(busId);
-
-            return new JsonResult(response);
+            return NoContent();
         }
     }
 }

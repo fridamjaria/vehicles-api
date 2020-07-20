@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Vehicles.API.Models;
 using Vehicles.API.Services;
@@ -32,7 +31,7 @@ namespace Vehicles.API
 
             services.AddSingleton<BusService>();
 
-            services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson(options => options.UseMemberCasing());
 
             ActorSystem actorSystem = ActorSystem.Create("VehiclesActorSystem");
             services.AddSingleton(typeof(ActorSystem), (serviceProvider) => actorSystem);
