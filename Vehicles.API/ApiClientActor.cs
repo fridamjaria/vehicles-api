@@ -1,10 +1,14 @@
-﻿using System;
-using System.Net.Http;
+﻿using System.Net.Http; 
 using System.Net.Http.Headers;
 using Akka.Actor;
 
 namespace Vehicles.API
 {
+    /// <summary>
+    /// Actor responsible for making external calls to WhereIsMyTransport API.
+    /// Takes in HttpRequestMessage with defined url and request payload
+    /// and returns response from external call to Sender.
+    /// </summary>
     public class ApiClientActor : ReceiveActor
     {
         private readonly IHttpClientFactory _clientFactory;
@@ -12,18 +16,14 @@ namespace Vehicles.API
         public ApiClientActor()
         {
             Receive<HttpRequestMessage>(async request => {
-                if(String.IsNullOrEmpty(ClientAuthenticationActor.AccessToken))
-                {
-                    Props ClientAuthenticationActorProps = Props.Create(() =>
-                        new ClientAuthenticationActor()
-                    );
+                Props ClientAuthenticationActorProps = Props.Create(() =>
+                    new ClientAuthenticationActor()
+                );
 
-                    var clientAuthenticationActor = Context.ActorOf(
-                        ClientAuthenticationActorProps, "clientAuthenticationActor"
-                    );
+                var clientAuthenticationActor =
+                Context.ActorOf(ClientAuthenticationActorProps);
 
-                    clientAuthenticationActor.Tell("start");
-                }
+                clientAuthenticationActor.Tell(ClientAuthenticationActor.startCommand);
 
                 var client = _clientFactory.CreateClient("whereIsMyTransport");
                 client.DefaultRequestHeaders.Authorization =
