@@ -30,25 +30,13 @@ namespace Vehicles.API
                 sp.GetRequiredService<IOptions<VehiclesDatabaseSettings>>().Value);
 
             services.AddSingleton<BusService>();
-            services.AddSingleton<LineService>();
 
             services.AddControllers().AddNewtonsoftJson(options => options.UseMemberCasing());
 
             ActorSystem actorSystem = ActorSystem.Create("VehiclesActorSystem");
             services.AddSingleton(typeof(ActorSystem), (serviceProvider) => actorSystem);
 
-            services.AddHttpClient("whereIsMyTransport", c =>
-            {
-                c.BaseAddress = new Uri("https://platform.whereismytransport.com/api/");
-                c.DefaultRequestHeaders.Add("Accept", "application/json");
-            });
-
-            services.AddHttpClient("whereIsMyTransportAuth", c =>
-            {
-                c.BaseAddress = new Uri("https://identity.whereismytransport.com/");
-                c.DefaultRequestHeaders.Add("Content-Type", "application/x-www-form-urlencoded");
-            });
-
+            ScheduleApiCall(actorSystem);
         }
 
 
@@ -68,6 +56,18 @@ namespace Vehicles.API
             {
                 endpoints.MapControllers();
             });
+        }
+
+        private void ScheduleApiCall(ActorSystem actorSystem)
+        {
+            Props BusLinesActorProps = Props.Create(() => new BusLinesActor());
+            var busLinesActor = actorSystem.ActorOf(BusLinesActorProps);
+
+            actorSystem
+                .Scheduler
+                .ScheduleTellRepeatedly(TimeSpan.FromMinutes(0),
+                TimeSpan.FromMinutes(60),
+                busLinesActor, BusLinesActor.startCommand, ActorRefs.NoSender);
         }
     }
 }

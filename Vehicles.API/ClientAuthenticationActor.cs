@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
 using Akka.Actor;
-using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using RestSharp;
 
 namespace Vehicles.API
 {
@@ -10,32 +9,32 @@ namespace Vehicles.API
     {
         public static string AccessToken { get; private set; }
         public static readonly string startCommand = "start";
-        private readonly IHttpClientFactory _clientFactory;
 
         public ClientAuthenticationActor()
         {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "connect/token");
-
-            var ClientId = Environment.GetEnvironmentVariable("WHERE_IS_MY_TRANSPORT_CLIENT_ID");
-            var ClientSecret = Environment.GetEnvironmentVariable("WHERE_IS_MY_TRANSPORT_CLIENT_SECRET");
-
-            var payload = new Dictionary<string, string>
+            var client = new RestClient("https://identity.whereismytransport.com/connect/token")
             {
-                { "client_id",     ClientId },
-                { "client_secret", ClientSecret },
-                { "grant_type",    "client_credentials" },
-                { "scope",         "transportapi:all" }
+                Timeout = -1
             };
+            IRestRequest request = new RestRequest(Method.POST);
+
+            var clientId = Environment.GetEnvironmentVariable("WHERE_IS_MY_TRANSPORT_CLIENT_ID");
+            var clientSecret = Environment.GetEnvironmentVariable("WHERE_IS_MY_TRANSPORT_CLIENT_SECRET");
+
+            request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
+            request.AddParameter("client_id", clientId);
+            request.AddParameter("client_secret", clientSecret);
+            request.AddParameter("grant_type", "client_credentials");
+            request.AddParameter("scope", "transportapi:all");
 
             Receive<string>(message =>
             {
                 if(string.Equals(message, startCommand, StringComparison.OrdinalIgnoreCase))
                 {
-                    var client = _clientFactory.CreateClient("whereIsMyTransportAuth");
-                    var response = client.PostAsync("connect/token", new FormUrlEncodedContent(payload)).Result;
-                    string json = response.Content.ReadAsStringAsync().Result;
-                    var jObject = JObject.Parse(json);
-                    AccessToken = jObject["access_token"].ToString();
+                    IRestResponse response = client.Execute(request);
+                    dynamic jObject = JsonConvert.DeserializeObject(response.Content);
+                    AccessToken = jObject.access_token;
+
                     Sender.Tell("continue");
                 } 
             });

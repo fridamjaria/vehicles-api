@@ -7,7 +7,7 @@ using Vehicles.API.Models;
 namespace Vehicles.API
 {
     /// <summary>
-    /// Actor responsible for making external calls to WhereIsMyTransport API.
+    /// Actor responsible for getting lines for specifuc  WhereIsMyTransport API.
     /// Takes in HttpRequestMessage with defined url and request payload
     /// and returns response from external call to Sender.
     /// </summary>
@@ -15,7 +15,7 @@ namespace Vehicles.API
     {
         public const string startCommand = "start";
         private readonly string _agency;
-        private const string _client = "WhereIsMyTransport";
+        private const string _baseUrl = "https://platform.whereismytransport.com";
 
         public LineClientActor(string agency)
         {
@@ -25,13 +25,11 @@ namespace Vehicles.API
             {
                 if (string.Equals(message, startCommand, System.StringComparison.OrdinalIgnoreCase))
                 {
-                    HttpRequestMessage getLinesRequest =
-                    new HttpRequestMessage(HttpMethod.Get, $"/lines?agencies={_agency}");
+                    Props GetClientActorProps = Props.Create(() =>
+                    new GetClientActor($"{_baseUrl}/api/lines?agencies={_agency}"));
+                    var getClientActor = Context.ActorOf(GetClientActorProps);
 
-                    Props ApiClientActorProps = Props.Create(() => new ApiClientActor(_client));
-                    var apiClientActor = Context.ActorOf(ApiClientActorProps);
-
-                    apiClientActor.Tell(getLinesRequest);
+                    getClientActor.Tell(GetClientActor.startCommand);
                 }
                 
             });

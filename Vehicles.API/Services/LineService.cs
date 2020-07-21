@@ -8,12 +8,12 @@ namespace Vehicles.API.Services
     {
         private readonly IMongoCollection<Line> _lines;
 
-        public LineService(IVehiclesDatabaseSettings settings)
+        public LineService()
         {
-            var client = new MongoClient(settings.ConnectionString);
-            var database = client.GetDatabase(settings.DatabaseName);
+            var client = new MongoClient("mongodb://localhost:27017");
+            var database = client.GetDatabase("VehiclesDb");
 
-            _lines = database.GetCollection<Line>(settings.LinesCollectionName);
+            _lines = database.GetCollection<Line>("Lines");
         }
 
         public List<Line> Get() =>

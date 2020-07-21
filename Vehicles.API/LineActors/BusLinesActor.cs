@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using Akka.Actor;
 using Vehicles.API.Models;
 using Vehicles.API.Services;
@@ -20,19 +21,18 @@ namespace Vehicles.API
          * I've defaulted to using Algoa Bus Company agency.
          */
         private const string _agency = "_UxoeIJ20UqKSKfLAP-bXw";
-        private readonly LineService _lineService;
+        private static readonly LineService _lineService = new LineService();
 
-        public BusLinesActor(LineService lineService)
+        public BusLinesActor()
         {
-            _lineService = lineService;
 
             Receive<string>(message =>
             {
-                if (string.Equals(message, startCommand, StringComparison.OrdinalIgnoreCase))
-                {
-                    Props LineClientActorProps = Props.Create(() => new LineClientActor(_agency));
-                    var lineClientActor = Context.ActorOf(LineClientActorProps);
-                    lineClientActor.Tell(LineClientActor.startCommand);
+            if (string.Equals(message, startCommand, StringComparison.OrdinalIgnoreCase))
+            {
+                Props LineClientActorProps = Props.Create(() => new LineClientActor(_agency));
+                var lineClientActor = Context.ActorOf(LineClientActorProps);
+                lineClientActor.Tell(LineClientActor.startCommand);
                 }
             });
 
