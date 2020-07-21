@@ -19,16 +19,17 @@ namespace Vehicles.API
         public const string continueCommand = "continue";
         public const string startCommand = "start";
         private readonly string _url;
+        private IActorRef _originalSender;
 
         public GetClientActor(string url)
         {
             _url = url;
-
+            
             Receive<string>(message =>
             {
-
-                if(string.Equals(message, startCommand, System.StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(message, startCommand, System.StringComparison.OrdinalIgnoreCase))
                 {
+                    _originalSender = Sender;
                     Props ClientAuthenticationActorProps = Props.Create(() =>
                     new ClientAuthenticationActor());
 
@@ -52,7 +53,7 @@ namespace Vehicles.API
                     var response = client.Execute(request);
                     List<Line> list = JsonConvert.DeserializeObject<List<Line>>(response.Content);
 
-                    Context.Parent.Tell(list);
+                    _originalSender.Tell(list);
                 }
             });
         }

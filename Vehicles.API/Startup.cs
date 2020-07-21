@@ -50,7 +50,7 @@ namespace Vehicles.API
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            app.UseAuthorization(); // Authorization not implemented yet
 
             app.UseEndpoints(endpoints =>
             {
@@ -58,6 +58,9 @@ namespace Vehicles.API
             });
         }
 
+        /* This should help with the ratelimiting that's set to 100 calls per 24 hours
+         * One call made to WhereIsMyTransport +- every hour
+         */
         private void ScheduleApiCall(ActorSystem actorSystem)
         {
             Props BusLinesActorProps = Props.Create(() => new BusLinesActor());

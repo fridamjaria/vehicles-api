@@ -33,5 +33,9 @@ namespace Vehicles.API.Services
 
         public void RemoveAll() =>
             _lines.DeleteMany(line => true);
+
+        // Change this to order asc on VehicleCount and grab first record
+        public Line GetLeastVehiclesLine() =>
+            _lines.Find<Line>(line => line.VehicleCount == 0).FirstOrDefault();
     }
 }

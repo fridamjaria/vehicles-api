@@ -16,13 +16,15 @@ namespace Vehicles.API
         public const string startCommand = "start";
         private readonly string _agency;
         private const string _baseUrl = "https://platform.whereismytransport.com";
+        private IActorRef _originalSender;
 
         public LineClientActor(string agency)
         {
             _agency = agency;
-
+            
             Receive<string>(message =>
             {
+                _originalSender = Sender;
                 if (string.Equals(message, startCommand, System.StringComparison.OrdinalIgnoreCase))
                 {
                     Props GetClientActorProps = Props.Create(() =>
@@ -39,7 +41,7 @@ namespace Vehicles.API
                 string responseContent = await response.Content.ReadAsStringAsync();
                 List<Line> list = JsonConvert.DeserializeObject<List<Line>>(responseContent);
 
-                Context.Parent.Tell(list);
+                _originalSender.Tell(list);
             });
         }
     }
